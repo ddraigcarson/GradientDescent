@@ -2,7 +2,7 @@
 
 Running a gradient descent app to create a line of best fit for a the number of calories burnt per mile cycled.
 Two implementations, one with standard python, the second with matrix based programming. 
-Matrix based programming in this case was 7 times faster
+Matrix based programming in this case was 7 times faster.
 
 Initial b: 0, m: 0, error: 5565.107834483211
 Running...

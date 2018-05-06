@@ -1,58 +1,54 @@
 import numpy as np
-from scipy.optimize import newton
 
 import time
 
+# INCOMPLETE
 
-def f(x):
-    return 6*x**5 - 5*x**4 - 4*x**3 + 3*x**2
-
-
-def df(x):
-    return 30*x**4 - 20*x*3 - 12*x**2 + 6*x
+DATA_LOCATION = "C:/Users/Greg/IdeaProjects/GradientDescent/src/data.csv"
+data_points = np.genfromtxt(DATA_LOCATION, delimiter=",")
 
 
-def dx(f, x):
-    return abs(0-f(x))
+def total_error(b, m):
+    x, y = np.split(data_points, 2, axis=1)
+    e_total = np.sum((y - (m * x + b))**2)/float(data_points.shape[0])
+    return e_total
 
 
-def newtons_method(f, df, x0, e):
-    delta = dx(f, x0)
-    while delta > e:
-        x0 = x0 - f(x0)/df(x0)
-        delta = dx(f, x0)
-    return x0, f(x0)
+def compute_jacobian(potential_solution, h=1e-5):
+    # First principle derivative is dy/dx = (f(x+h) - f(x))/h where h->0
+    # We are trying to find the minimum of the function, where dy/dx = 0 (minima)
+    # For simplicity I will only solve the 2 feature problem
+    jacobian = np.zeros(len(potential_solution))
+    b = potential_solution[0]
+    m = potential_solution[1]
+    jacobian[0] = (total_error(b + h, m) - total_error(b, m))/h
+    jacobian[1] = (total_error(b, m + h) - total_error(b, m))/h
+    return jacobian
 
 
-def test_with_scipy(f, df, x0s, e):
-    print("SCIPY TEST")
-    for x0 in x0s:
-        x = newton(f, x0, df, tol=1E-3)
-        print(x, f(x))
+def compute_hessian(potential_solution, h=1e-5):
+    hessian = np.zeros(len(potential_solution))
+    b = potential_solution[0]
+    m = potential_solution[1]
+    hessian[0] = (compute_jacobian([b + h, m]) - compute_jacobian([b, m]))/h
+    hessian[1] = (compute_jacobian([b, m + h]) - compute_jacobian([b, m]))/h
+    return hessian
 
 
-def run():
-    print("Running...")
-    error_tolerance = 1e-10
-    x0s = [0, 0.5, 1]
-    for x0 in x0s:
-        print(newtons_method(f, df, x0, error_tolerance))
-    test_with_scipy(f, df, x0s, error_tolerance)
+def run_2nd_order():
+    print("Starting second order newton optimization")
+    initial_solution = [0., 1.]
+    iterations = 10000
+    solutions = np.zeros((iterations, len(initial_solution)))
+    solutions[0] = initial_solution
+    final_solution = None
 
-
-def run_numpy():
-    print("Running Numpy...")
-    # not much point, at most I can do multiple x0 values at the same time :(
+    for i in range(iterations):
+        jacobian = compute_jacobian(solutions[i])
 
 
 np_start = time.time()
-run()
+run_2nd_order()
 np_end = time.time()
 print("Basic %.3f s" % (np_end - np_start))
 
-print("--------------------------------")
-
-np_start = time.time()
-run_numpy()
-np_end = time.time()
-print("Numpy %.3f s" % (np_end - np_start))
